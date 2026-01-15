@@ -35,8 +35,9 @@ df_cadastrados_limpo.isnull().sum()
 df_cadastrados_limpo['Ocupacao'].unique()
 
 #%%
-# Preenchendo os dados nulos com o nome Outros
-df_cadastrados_limpo['Ocupacao'] = df_cadastrados_limpo['Ocupacao'].fillna(value="Outro")
+# Preenchendo missing values com categoria explícita (não genérica)
+# Melhor que "Outro": identifica clientes que não informaram ocupação
+df_cadastrados_limpo['Ocupacao'] = df_cadastrados_limpo['Ocupacao'].fillna(value="Nao_informada")
 # %%
 # Conta valores únicos dentro de cada feature
 df_cadastrados_limpo.nunique()
@@ -102,28 +103,22 @@ df_cadastrados_limpo=df_cadastrados_limpo[['ID_Cliente', 'Tem_carro', 'Tem_casa_
 
 #%%
 
-'''Técnica para remoção de outliers a partir de um intervalo de confiança
-o valor +- o desvio-padrão'''
+'''Winsorização de extremos em vez de remoção (mantém dados, limita valores extremos)'''
 
 coluna = df_cadastrados_limpo['Rendimento_anual']
 
 coluna_med = coluna.mean()
 coluna_std = coluna.std()
 
-limite_sup = coluna_med + (2 * coluna_std)
-limite_inf = coluna_med - (2 * coluna_std)
+# Definir limites para winsorização (1º e 99º percentil = mais seguro que ±2σ)
+from scipy.stats import mstats
+df_cadastrados_limpo['Rendimento_anual'] = mstats.winsorize(
+    df_cadastrados_limpo['Rendimento_anual'], 
+    limits=[0.01, 0.01]  # Limita top/bottom 1% ao invés de remover
+)
 
-index_outliers = []
-
-for index, valor in coluna.items(): 
-  if valor > limite_sup or valor < limite_inf:
-    index_outliers.append(index)
-
-len(index_outliers)
-
-#%%
-
-df_clientes_cadastrados_sem_outliers = df_cadastrados_limpo.drop(index_outliers)
+# Sem remoção de linhas: preserva todos os clientes
+df_clientes_cadastrados_sem_outliers = df_cadastrados_limpo
 df_clientes_cadastrados_sem_outliers.shape
 
 #%%

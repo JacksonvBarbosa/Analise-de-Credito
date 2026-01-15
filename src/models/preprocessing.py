@@ -25,13 +25,24 @@ class DropFeatures(BaseEstimator,TransformerMixin):
 # Normalização de dados
 class MinMax(BaseEstimator,TransformerMixin):
     def __init__(self,min_max_scaler  = ['Idade', 'Rendimento_anual', 'Tamanho_familia', 'Anos_empregado']):
-        self.min_max_scaler = min_max_scaler 
+        self.min_max_scaler = min_max_scaler
+        self.scaler_fitted = None
+    
     def fit(self,df):
+        # FIT APENAS em treino (salva limites)
+        self.scaler_fitted = MinMaxScaler()
+        self.scaler_fitted.fit(df[self.min_max_scaler])
         return self
+    
     def transform(self,df):
-        if (set(self.min_max_scaler ).issubset(df.columns)):
-            min_max_enc = MinMaxScaler()
-            df[self.min_max_scaler] = min_max_enc.fit_transform(df[self.min_max_scaler ])
+        # APPLY SEM REFIT (usa limites aprendidos)
+        if self.scaler_fitted is None:
+            print("Erro: scaler não foi FITado. Execute fit() antes de transform()")
+            return df
+        
+        if (set(self.min_max_scaler).issubset(df.columns)):
+            df = df.copy()
+            df[self.min_max_scaler] = self.scaler_fitted.transform(df[self.min_max_scaler])
             return df
         else:
             print('Uma ou mais features não estão no DataFrame')
@@ -83,12 +94,23 @@ class OneHotEncodingNames(BaseEstimator,TransformerMixin):
 class OrdinalFeature(BaseEstimator,TransformerMixin):
     def __init__(self,ordinal_feature = ['Grau_escolaridade']):
         self.ordinal_feature = ordinal_feature
+        # Ordem educacional explícita (não alfabética)
+        self.educacao_ordem = {
+            'Primário': 1,
+            'Secundário': 2,
+            'Superior': 3,
+            'Pós-Graduação': 4,
+            'Nao_informada': 0
+        }
     def fit(self,df):
         return self
     def transform(self,df):
         if 'Grau_escolaridade' in df.columns:
-            ordinal_encoder = OrdinalEncoder()
-            df[self.ordinal_feature] = ordinal_encoder.fit_transform(df[self.ordinal_feature])
+            # Usar mapeamento explícito em vez de OrdinalEncoder alfabético
+            df['Grau_escolaridade'] = df['Grau_escolaridade'].map(self.educacao_ordem)
+            # Investigar valores não mapeados
+            if df['Grau_escolaridade'].isna().sum() > 0:
+                df['Grau_escolaridade'] = df['Grau_escolaridade'].fillna(0)
             return df
         else:
             print("Grau_escolaridade não está no DataFrame")

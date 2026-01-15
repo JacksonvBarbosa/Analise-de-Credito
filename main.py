@@ -13,7 +13,7 @@ def main():
     print(data_path)
 
     df = pd.read_csv(data_path)
-    pipeline(df, "xgboost", save=True, nome='modelo')
+    pipeline(df, "xgboost", save=True, nome='xgb')
 
 
 if __name__ == "__main__":

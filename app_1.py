@@ -14,18 +14,76 @@ st.set_page_config(
     layout="wide"
 )
 
-# Função para carregar o modelo com cache
-# @st.cache_resource
-# def load_model():
-#     """Carrega o artefato salvo com pipeline e modelo treinado."""
-#     model_path = Path(__file__).parent / 'modelo' / 'xgb.joblib'
-#     try:
-#         return joblib.load(model_path)
-#     except FileNotFoundError:
-#         st.error("Erro: Modelo não encontrado. Verifique se o arquivo 'xgb.joblib' existe na pasta 'modelo'.")
-#         return None
+# Aplicar estilo CSS para sidebar com paleta profissional de finanças
+st.markdown("""
+<style>
+    /* Sidebar com paleta azul-esverdeada profissional (confiança e estabilidade financeira) */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0F4C5C 0%, #1B6B82 100%);
+    }
+    
+    /* Textos e labels do sidebar */
+    [data-testid="stSidebar"] label {
+        color: #FFFFFF !important;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown {
+        color: #FFFFFF !important;
+    }
+    
+    /* Headers do sidebar */
+    [data-testid="stSidebar"] h2 {
+        color: #FFFFFF !important;
+        border-bottom: 2px solid #45B7A8 !important;
+        padding-bottom: 10px;
+    }
+    
+    /* Input fields - contraste alto */
+    [data-testid="stSidebar"] input {
+        background-color: #E8F4F8 !important;
+        color: #0F4C5C !important;
+        border: 1px solid #45B7A8 !important;
+    }
+    
+    [data-testid="stSidebar"] select {
+        background-color: #E8F4F8 !important;
+        color: #0F4C5C !important;
+        border: 1px solid #45B7A8 !important;
+    }
+    
+    /* Radio buttons e checkboxes */
+    [data-testid="stSidebar"] [role="radio"] {
+        color: #FFFFFF !important;
+    }
+    
+    [data-testid="stSidebar"] [role="checkbox"] {
+        color: #FFFFFF !important;
+    }
+    
+    /* Botão de análise */
+    [data-testid="stSidebar"] button {
+        background: linear-gradient(90deg, #45B7A8 0%, #2FA89F 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 600 !important;
+        margin-top: 15px;
+    }
+    
+    [data-testid="stSidebar"] button:hover {
+        background: linear-gradient(90deg, #2FA89F 0%, #1E7F76 100%) !important;
+    }
+    
+    /* Disclaimer no sidebar */
+    [data-testid="stSidebar"] .stMarkdown p {
+        color: #FFC107 !important;
+        font-size: 12px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-"""Carrega valores únicos para os selectboxes a partir dos dados processados."""
+# Carregamento dos dados de referência
 dados = pd.read_csv(r'dados\processed\df_analises_models.csv')
 
 
@@ -115,7 +173,7 @@ if st.sidebar.button("🔍 Analisar Risco"):
     # Processar dados
     with st.spinner('Processando análise...'):
         # Carregar modelo
-        model = joblib.load('modelo/modelo.joblib')
+        model = joblib.load('modelo/xgb.joblib')
         
         if model is not None:
             # Fazer predição
@@ -131,9 +189,11 @@ if st.sidebar.button("🔍 Analisar Risco"):
         col1, col2 = st.columns(2)
 
         with col1:
+            # Formatar probabilidade como porcentagem com 2 casas decimais
+            prob_percentage = prob * 100
             st.metric(
                 label="Probabilidade de Inadimplência",
-                value=f"{prob:.1%}"
+                value=f"{prob_percentage:.2f}%"
             )
 
         with col2:
